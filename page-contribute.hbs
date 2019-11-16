@@ -1,0 +1,140 @@
+{{!< default}}
+{{!-- The tag above means: insert everything in this file
+into the {body} of the default.hbs template --}}
+
+{{!-- The big featured header, it uses blog cover image as a BG if available --}}
+<header class="site-header outer">
+    <div class="inner">
+        {{> "site-nav"}}
+    </div>
+</header>
+
+{{> "ticker"}}
+{{!-- Everything inside the #post tags pulls data from the post --}}
+{{#post}}
+
+<main id="site-main" class="site-main outer">
+    <div class="inner">
+
+        <article class="post-full {{post_class}} {{#unless feature_image}}no-image{{/unless}}">
+
+            <header class="post-full-header">
+                <h1 class="post-full-title">{{title}}</h1>
+            </header>
+
+            {{#if feature_image}}
+            <figure class="post-full-image">
+                {{!-- This is a responsive image, it loads different sizes depending on device
+                https://medium.freecodecamp.org/a-guide-to-responsive-images-with-ready-to-use-templates-c400bd65c433 --}}
+                <img srcset="{{img_url feature_image size="s"}} 300w,
+                            {{img_url feature_image size="m"}} 600w,
+                            {{img_url feature_image size="l"}} 1000w,
+                            {{img_url feature_image size="xl"}} 2000w" sizes="(max-width: 800px) 400px,
+                            (max-width: 1170px) 700px,
+                            1400px" src="{{img_url feature_image size="xl"}}" alt="{{title}}" />
+            </figure>
+            {{/if}}
+            <section class="post-full-content" style="min-height: 0;">
+                <div class="post-content">
+                    {{content}}
+                </div>
+            </section>
+            <div id="app">
+                <div v-cloak>
+                    <div class="card-deck">
+                        <div class="card bg-light m-3" v-for="donation in donationConfigs">
+                            <!--img src="..." class="card-img-top" alt="..."-->
+                            <div class="card-body d-flex flex-column">
+                                <h3 class="card-title">$${donation.amount}</h3>
+                                <p class="card-text">${donation.message}</p>
+                                <button class="btn btn-primary mt-auto" v-on:click="showModal(donation)">Donate
+                                    $${donation.amount}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-for="items in splitArray(donationItems, numColumns)">
+                        <div class="card-deck">
+                            <div class="card bg-light m-3" v-for="item in items">
+                                <img :src="item.imageUrl" class="card-img-top">
+                                <div class="card-body d-flex flex-column">
+                                    <h3 class="card-title">${item.title}</h3>
+                                    <p class="card-text">${item.message}</p>
+                                    <form @submit.prevent="showModal(item)" class="mt-auto">
+                                        <div v-if="item.collectMessage" class="form-group">
+                                            <div v-if="!item.collectMessageMultiline" class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">${item.collectMessagePrompt}</span>
+                                                </div>
+                                                <input class="form-control" v-model="item.itemDesc" required
+                                                    placeholder="Message" :maxlength="item.maxMessageLength || 524288">
+                                            </div>
+                                            <template v-if="item.collectMessageMultiline">
+                                                <label for="message">${item.collectMessagePrompt}</label>
+                                                <textarea v-model="item.itemDesc" class="form-control" rows="5"
+                                                    id="message" :maxlength="item.maxMessageLength || 524288" required></textarea>
+                                            </template>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <input v-model.number="item.amount" :readonly="!item.customAmount"
+                                                    type="number" :min="item.minAmount" step="any"
+                                                    placeholder="Contribution Amount" class="form-control" required>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">USD</span>
+                                                    <button class="btn btn-primary">Continue</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+</main>
+
+{{/post}}
+
+{{!-- The #contentFor helper here will send everything inside it up to the matching #block helper found in default.hbs --}}
+{{#contentFor "scripts"}}
+<script>
+    $(function () {
+        var $postContent = $(".post-full-content");
+        $postContent.fitVids();
+    });
+</script>
+<script src="https://unpkg.com/vue"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            donationConfigs: typeof donationConfigs === 'undefined' ? [] : donationConfigs,
+            donationItems: typeof donationItems === 'undefined' ? [] : donationItems,
+            numColumns: typeof numColumns === 'undefined' ? 3 : numColumns,
+        },
+        methods: {
+            showModal: function (config) {
+                BtcPayServerModal.show(
+                    btcPayServerUrl,
+                    storeId,
+                    { price: config.amount, currency: 'USD', itemDesc: config.itemDesc, itemCode: config.itemCode || "donation" }
+                )
+
+            },
+            splitArray: function (arr, step) {
+                var chunks = [],
+                    i = 0,
+                    n = arr.length;
+                while (i < n) {
+                    chunks.push(arr.slice(i, i += step));
+                }
+                return chunks;
+            }
+        },
+        delimiters: ['${', '}']
+    })
+</script>
+{{/contentFor}}

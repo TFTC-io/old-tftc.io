@@ -1,0 +1,63 @@
+<div id="ticker">
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <div class="ticker__item">Current Price: $${price}</div>
+      <div class="ticker__item">Current Block Height: ${blockHeight}</div>
+      <div class="ticker__item">Current Mempool Size: ${mempoolSize} vMB</div>
+      <div class="ticker__item">Current Hashrate: ${hashRate} EHash/s</div>
+      <div class="ticker__item">Current Difficulty: ${difficulty}</div>
+    </div>
+  </div>
+</div>
+<script src="https://unpkg.com/vue"></script>
+<script>
+  var ticker = new Vue({
+    el: '#ticker',
+    data: {
+      blockHeight: null,
+      mempoolSize: null,
+      price: "$9,627.75",
+      hashRate: 81.8,
+      difficulty: 6379265451411,
+    },
+    methods: {
+      refresh: function () {
+        var self = this;
+
+        fetch('https://blockstream.info/api/blocks/tip/height')
+          .then(function (response) {
+            return response.text();
+          }).then(function (text) {
+            self.blockHeight = text;
+          });
+
+        fetch('https://blockstream.info/api/mempool')
+          .then(function (response) {
+            return response.json();
+          }).then(function (json) {
+            self.mempoolSize = (Number(json.vsize) / 1000000).toFixed(2);
+          });
+
+        fetch('https://blockchain.info/ticker')
+          .then(function (response) {
+            return response.json();
+          }).then(function (json) {
+            self.price = Number(json.USD.last).toFixed(2);
+          });
+
+        fetch('https://api.blockchain.info/stats')
+          .then(function (response) {
+            return response.json();
+          }).then(function (json) {
+            self.hashRate = (Number(json.hash_rate) / 1E9).toFixed(2);
+            self.difficulty = json.difficulty;
+          });
+      }
+    },
+    created: function () {
+      this.refresh();
+      setInterval(this.refresh, 60000)
+    },
+    delimiters: ['${', '}']
+  })
+</script>

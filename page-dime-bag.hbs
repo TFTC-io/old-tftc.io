@@ -1,0 +1,142 @@
+{{!< default}}
+{{!-- The tag above means: insert everything in this file
+into the {body} of the default.hbs template --}}
+
+{{!-- The big featured header, it uses blog cover image as a BG if available --}}
+<header class="site-header outer">
+    <div class="inner">
+        {{> "site-nav"}}
+    </div>
+</header>
+
+{{> "ticker"}}
+{{!-- Everything inside the #post tags pulls data from the post --}}
+{{#post}}
+
+<main id="site-main" class="site-main outer">
+    <div class="inner">
+
+        <article class="post-full {{post_class}} {{#unless feature_image}}no-image{{/unless}}">
+
+            <header class="post-full-header">
+                <h1 class="post-full-title">{{title}}</h1>
+            </header>
+
+            {{#if feature_image}}
+            <figure class="post-full-image">
+                {{!-- This is a responsive image, it loads different sizes depending on device
+                https://medium.freecodecamp.org/a-guide-to-responsive-images-with-ready-to-use-templates-c400bd65c433 --}}
+                <img
+                    srcset="{{img_url feature_image size="s"}} 300w,
+                            {{img_url feature_image size="m"}} 600w,
+                            {{img_url feature_image size="l"}} 1000w,
+                            {{img_url feature_image size="xl"}} 2000w"
+                    sizes="(max-width: 800px) 400px,
+                            (max-width: 1170px) 700px,
+                            1400px"
+                    src="{{img_url feature_image size="xl"}}"
+                    alt="{{title}}"
+                />
+            </figure>
+            {{/if}}
+
+
+            <section class="post-full-content" style="min-height: 0;">
+                <div class="post-content">
+                    {{content}}
+                </div>
+            </section>
+
+            <div id="app">
+                <div v-cloak>
+                    <div v-if="showFinalThought" class="jumbotron">
+                        <div class="h2" v-html="post.finalThought"></div>
+                        <hr class="my-4">
+                        <h4>&mdash;Marty Bent</h4>
+                        <a class="btn btn-primary btn-lg mt-3" role="button" :href="post.url" target="_blank">Read Full Article</a>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-primary btn-lg" @click="waitForPayment()">${showFinalThought ? "Buy another Thought"
+                            : "Buy a Thought"}</a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+</main>
+
+{{/post}}
+
+{{!-- The #contentFor helper here will send everything inside it up to the matching #block helper found in default.hbs --}}
+{{#contentFor "scripts"}}
+<script>
+$(function() {
+    var $postContent = $(".post-full-content");
+    $postContent.fitVids();
+});
+</script>
+<script src="https://unpkg.com/@tryghost/content-api@1.2.1/umd/content-api.min.js"></script>
+<script>
+    var finalThoughtPosts = [];
+    const api = new GhostContentAPI({
+        url: 'https://martybent.ghost.io',
+        key: 'aad78ff74f380ccdf649ed4451',
+        version: 'v2'
+    });
+    api.posts.browse({
+        include: "tags",
+        limit: "all",
+        filter: "tag:martys-ent"
+    })
+        .then(function (posts) {
+            // Extract final thought from each post
+            posts = posts.map(post => {
+                post.finalThought = extractFinalThought(post.html)
+                return post;
+            });
+            // Remove posts without final thought
+            finalThoughtPosts = posts.filter(post => post.finalThought != null);
+        });
+
+    // Extract first paragraph after last "final thought", case insensitive.
+    function extractFinalThought(postContent) {
+        var sections = postContent.match(/.*final thought.*?(<p>.*<\/p>)/i);
+        if (sections == null) {
+            return null;
+        }
+        else {
+            return sections[1];
+        }
+    }
+</script>
+<script src="https://unpkg.com/vue"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            post: {},
+            showFinalThought: false,
+        },
+        methods: {
+            waitForPayment: function () {
+                BtcPayServerModal.show(
+                    btcPayServerUrl,
+                    storeId,
+                    { price: price, currency: 'USD', itemCode: "final-thought"}
+                )
+                    .then(function (invoice) {
+                        if (invoice != null) {
+                            // Show post content
+                            var randomIndex = Math.floor(Math.random() * finalThoughtPosts.length);
+                            app.post = finalThoughtPosts[randomIndex];
+                            app.showFinalThought = true;
+                        }
+                    });
+            }
+        },
+        delimiters: ['${', '}']
+    })
+</script>
+<script>
+</script>
+{{/contentFor}}

@@ -1,0 +1,313 @@
+{{!< default}}
+{{!-- The tag above means: insert everything in this file
+into the {body} of the default.hbs template --}}
+
+{{> header background=@site.cover_image}} {{!--Special header.hbs partial to generate the <header> tag--}}
+<div class="inner">
+    <div class="site-header-content">
+        <h1 class="site-title">
+            {{#if @site.logo}}
+            <img class="site-logo" src="{{img_url @site.logo size="l"}}" alt="{{@site.title}}" />
+            {{else}}
+            {{@site.title}}
+            {{/if}}
+        </h1>
+        <h2 class="site-description">{{@site.description}}</h2>
+    </div>
+    {{> "site-nav"}}
+</div>
+</header>
+
+{{> "ticker"}}
+{{!-- The main content area --}}
+<main id="site-main" class="site-main outer">
+    <div class="inner">
+        <div class="subscribe-container mb-3">
+            <h2><a class="m-3" href="#carousel" data-slide-to="0" >Recent Posts</a>
+            <a class="m-3" href="#carousel" data-slide-to="1">Recent Pods</a></h2>
+            <p></p>
+            <!--a class="m-6" href="#carousel" data-slide-to="2">Recent Vids</a-->
+        </div>
+        <div id="carousel" class="carousel slide">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div id="martys-bent">
+                        <h1 class="center">Recent Posts</h1>
+                        <div v-cloak>
+                            <div class="post-feed">
+                                <article v-for="post in posts" class="post-card post">
+                                    <div class="post-card-content">
+                                        <a class="post-card-content-link" :href="post.url">
+                                            <header class="post-card-header">
+                                                <span class="post-card-tags">${post.primary_tag.name}</span>
+                                                <h2 class="post-card-title">${post.title}</h2>
+                                            </header>
+                                            <section class="post-card-excerpt">
+                                                <p>${post.custom_excerpt}</p>
+                                            </section>
+                                        </a>
+                                        <footer class="post-card-meta">
+                                            <time class="post-date">
+                                                ${(new Date(post.published_at)).toDateString()}
+                                            </time>
+                                        </footer>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div id="podcast">
+                        <h1 class="center">Recent Pods</h1>
+                        <div v-cloak>
+                            <div class="subscribe-container mb-3">
+                                <template v-for="link in podcastLinks">
+                                    <a :href="link.link" target="_blank">
+                                        <img :src="link.image" class="subscribe-image m-2">
+                                    </a>
+                                </template>
+                            </div>
+                            <div v-for="episode in podcast.episodes" class="card m-4">
+                                <div class="card-body container-fluid">
+                                    <div class="row m-3">
+                                        <div class="col-2 padding-sm">
+                                            <img :src="podcast.image" class="img-fluid rounded">
+                                        </div>
+                                        <div class="col-10 padding-sm">
+                                            <h2 class="card-title episode-title">${episode.title}</h2>
+                                            <p v-if="!episode.expand"
+                                                class="card-text episode-description episode-description-short"
+                                                v-html="episode.description.substring(0,250) + '...'"></p>
+                                            <p v-if="episode.expand" class="card-text episode-description"
+                                                v-html="episode.description"></p>
+                                            <div class="m-3">
+                                                <button v-if="!episode.expand" class="btn btn-lg btn-primary"
+                                                    @click="episode.expand = true">Read More</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row m-3">
+                                        <div class="column">
+                                            <audio controls>
+                                                <source :src="episode.enclosureUrl">
+                                            </audio>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--div class="carousel-item">
+                    <div id="videos">
+                        <div v-cloak>
+                            <h1 class="center">Recent Vids</h1>
+                            <div v-for="video in videos" class="card m-4">
+                                <div class="card-body container-fluid">
+                                    <div class="row m-3">
+                                        <div class="col-2 padding-sm">
+                                            <img :src="video.snippet.thumbnails.default.url" class="img-fluid rounded">
+                                        </div>
+                                        <div class="col-10 padding-sm">
+                                            <h2 class="card-title episode-title" v-html="video.snippet.title"></h2>
+                                            <p class="card-text episode-description" v-html="video.snippet.description"></p>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="row m-3">
+                                        <div class="column">
+                                            <iframe width="560" height="315"
+                                                :src="'https://www.youtube.com/embed/' + video.id.videoId"
+                                                frameborder="0"
+                                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                                allowfullscreen></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div-->
+            </div>
+        </div>
+    </div>
+</main>
+{{!-- The #contentFor helper here will send everything inside it up to the matching #block helper found in default.hbs --}}
+{{#contentFor "scripts"}}
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+
+<!--link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"-->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+
+<script>
+    $('#myCarousel').carousel();
+</script>
+<script src="https://unpkg.com/vue"></script>
+<script>
+    const rssUrl = 'https://anchor.fm/s/558f520/podcast/rss'
+    const podcastLinks = [
+        {
+            image: "https://d12xoj7p9moygp.cloudfront.net/images/podcast/logo-square/004/apple_podcasts.png",
+            link: "https://podcasts.apple.com/us/podcast/tales-from-the-crypt/id1292381204"
+        },
+        {
+            image: "https://d12xoj7p9moygp.cloudfront.net/images/podcast/logo-square/004/anchor.png",
+            link: "https://anchor.fm/tales-from-the-crypt/"
+        },
+        {
+            image: "https://d12xoj7p9moygp.cloudfront.net/images/podcast/logo-square/004/spotify.png",
+            link: "https://open.spotify.com/show/0Vd8E5vWnCfB4xucu87WNZ",
+        },
+        {
+            image: "https://overcast.fm/img/logo.svg?3",
+            link: "https://overcast.fm/itunes1292381204/tales-from-the-crypt",
+        }
+
+    ]
+    var app = new Vue({
+        el: '#podcast',
+        data: {
+            podcast: {},
+            podcastLinks: podcastLinks,
+        },
+        methods: {
+            getFeed: function (url) {
+                return fetch(url)
+                    .then(response => response.text())
+                    .then(text => {
+                        parser = new DOMParser();
+                        return parser.parseFromString(text, "text/xml");
+                    })
+                    .then(xml => {
+                        const getElementValue = function (xml, tagName) {
+                            return xml.getElementsByTagName(tagName)[0].firstChild.nodeValue;
+                        }
+                        const xmlChannel = xml.getElementsByTagName("channel")[0];
+                        let podcast = {
+                            title: getElementValue(xmlChannel, "title"),
+                            link: getElementValue(xmlChannel, "link"),
+                            description: getElementValue(xmlChannel, "description"),
+                            image: getElementValue(xmlChannel.getElementsByTagName("image")[0], "url"),
+                        }
+                        podcast.episodes = Array.from(xml.getElementsByTagName("item")).map(xmlEpisode => {
+                            return {
+                                title: xmlEpisode.getElementsByTagName("title")[0].firstChild.nodeValue,
+                                link: xmlEpisode.getElementsByTagName("link")[0].firstChild.nodeValue,
+                                description: xmlEpisode.getElementsByTagName("description")[0].firstChild.nodeValue,
+                                pubDate: new Date(xmlEpisode.getElementsByTagName("pubDate")[0].firstChild.nodeValue),
+                                enclosureUrl: xmlEpisode.getElementsByTagName("enclosure")[0].getAttribute("url"),
+                                expand: false
+                            }
+                        }).slice(0, 9);
+                        return podcast;
+                    });
+            }
+        },
+        created: function () {
+            this.getFeed(rssUrl).then(podcast => this.podcast = podcast);
+        },
+        delimiters: ['${', '}']
+    })
+</script>
+<style>
+    h1.center {
+        text-align: center;
+    }
+
+    .episode-description p {
+        margin-bottom: 0px;
+    }
+
+    .episode-title {
+        margin-top: 0px;
+    }
+
+    .subscribe-container {
+        text-align: center;
+    }
+
+    .subscribe-image {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+    }
+
+    .padding-sm {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+</style>
+<script src="https://unpkg.com/@tryghost/content-api@1.2.1/umd/content-api.min.js"></script>
+<script>
+    var bent = new Vue({
+        el: '#martys-bent',
+        data: {
+            posts: [],
+        },
+        methods: {
+
+        },
+        created: function () {
+            var self = this;
+            var bentPosts = [];
+            const api = new GhostContentAPI({
+                url: 'https://martybent.ghost.io',
+                key: 'aad78ff74f380ccdf649ed4451',
+                version: 'v2'
+            });
+            api.posts.browse({
+                include: "tags",
+                limit: "all",
+                filter: "tag:martys-ent"
+            })
+                .then(function (posts) {
+                    self.posts = posts.slice(0, 9);
+                });
+        },
+        delimiters: ['${', '}']
+    });
+</script>
+<script src="https://apis.google.com/js/api.js"></script>
+<script>
+    const GOOGLE_API_KEY = "AIzaSyCpdAq1rrewk2tNn7cPLV8O04JjRQwrE9w";
+    const YOUTUBE_CHANNEL_ID = "UCtdbWsnfA08KhSUO4amVLaQ";
+    var videos = new Vue({
+        el: '#videos',
+        data: {
+            videos: [],
+        },
+        methods: {
+        },
+        created: function () {
+            const self = this;
+            return gapi.load('client', function () {
+                gapi.client.init({
+                    'apiKey': GOOGLE_API_KEY,
+                    'discoveryDocs': ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"],
+                }).then(function () {
+                    return gapi.client.youtube.search.list({
+                        'part': 'snippet',
+                        'channelId': YOUTUBE_CHANNEL_ID,
+                        'order': 'date',
+                        'maxResults': '9'
+                    });
+                }).then(function (response) {
+                    self.videos = response.result.items;
+                }, function (reason) {
+                    console.log('Error: ' + JSON.stringify(reason));
+                });
+            });
+        },
+        delimiters: ['${', '}']
+    });
+</script>
+{{/contentFor}}
